@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with cumulative stats",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "totalPoints": { "type": "number" },
+        "bestScore": { "type": "number" },
+        "lastPlayed": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName", "totalPoints", "bestScore"]
+    },
+    "LeaderboardEntry": {
+      "title": "Leaderboard Entry",
+      "description": "A single quiz completion entry for global rankings",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "displayName": { "type": "string" },
+        "points": { "type": "number" },
+        "difficulty": { "type": "number" },
+        "subjectStr": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "displayName", "points", "difficulty", "subjectStr", "createdAt"]
+    },
+    "Lobby": {
+      "title": "Quiz Lobby",
+      "description": "Real-time multiplayer room metadata",
+      "type": "object",
+      "properties": {
+        "seed": { "type": "number" },
+        "hostId": { "type": "string" },
+        "status": { "type": "string", "enum": ["waiting", "active", "finished"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "config": { "type": "object" },
+        "players": { "type": "array" },
+        "questions": { "type": "array" }
+      },
+      "required": ["seed", "hostId", "status", "createdAt", "config", "players"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Private profile of each user"
+    },
+    "/leaderboard/{entryId}": {
+      "schema": "LeaderboardEntry",
+      "description": "Global public leaderboard entries"
+    },
+    "/lobbies/{lobbyId}": {
+      "schema": "Lobby",
+      "description": "Multiplayer quiz lobbies"
+    }
+  }
+}

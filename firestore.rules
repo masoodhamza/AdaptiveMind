@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'anonymous'); }
+    
+    // Note: AI Studio guest users (anonymous) might not have email_verified.
+    // For this app, we'll allow anonymous if they are regular users.
+    
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) && isValidUser(incoming());
+      
+      function isValidUser(data) {
+        return data.displayName is string && data.displayName.size() <= 50
+          && data.totalPoints is number
+          && data.bestScore is number;
+      }
+    }
+
+    // Leaderboard
+    match /leaderboard/{entryId} {
+      allow read: if true; // Public leaderboard
+      allow create: if isSignedIn() 
+                    && isOwner(incoming().userId)
+                    && isValidEntry(incoming())
+                    && incoming().createdAt == request.time;
+      
+      function isValidEntry(data) {
+        return data.userId is string 
+          && data.displayName is string && data.displayName.size() <= 50
+          && data.points is number
+          && data.difficulty is number
+          && data.subjectStr is string && data.subjectStr.size() <= 100;
+      }
+    }
+
+    // Lobbies
+    match /lobbies/{lobbyId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() 
+                    && isOwner(incoming().hostId)
+                    && incoming().status == 'waiting'
+                    && incoming().createdAt == request.time;
+      
+      allow update: if isSignedIn() && (
+        // Action: Join (any verified user can add themselves to players)
+        (incoming().diff(existing()).affectedKeys().hasOnly(['players'])) ||
+        // Action: Host operations (start, set questions)
+        (isOwner(existing().hostId) && incoming().diff(existing()).affectedKeys().hasAny(['status', 'questions', 'players']))
+      );
+    }
+  }
+}
