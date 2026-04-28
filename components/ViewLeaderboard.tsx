@@ -11,10 +11,11 @@ export const ViewLeaderboard: React.FC = () => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [displayLimit, setDisplayLimit] = useState(5);
 
   useEffect(() => {
     const now = new Date();
-    let startTime = new Date();
+    const startTime = new Date();
 
     if (period === 'daily') {
       startTime.setHours(0, 0, 0, 0);
@@ -24,8 +25,10 @@ export const ViewLeaderboard: React.FC = () => {
       startTime.setMonth(now.getMonth() - 1);
     }
 
+    // Reset display limit when period changes
+    setDisplayLimit(5);
+
     // Fetch the top 100 entries from the last month and filter/sort in JS
-    // This avoids needing a composite index for points + createdAt
     const q = query(
       collection(db, 'leaderboard'),
       orderBy('points', 'desc'),
@@ -44,7 +47,7 @@ export const ViewLeaderboard: React.FC = () => {
         return entryTime >= startTime.getTime();
       });
 
-      setEntries(data.slice(0, 10));
+      setEntries(data);
       setLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'leaderboard');
@@ -53,6 +56,17 @@ export const ViewLeaderboard: React.FC = () => {
 
     return () => unsubscribe();
   }, [period]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 10) {
+      if (displayLimit < entries.length) {
+        setDisplayLimit(prev => Math.min(prev + 5, entries.length));
+      }
+    }
+  };
+
+  const displayedEntries = entries.slice(0, displayLimit);
 
   return (
     <motion.div
@@ -78,7 +92,10 @@ export const ViewLeaderboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div 
+        onScroll={handleScroll}
+        className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar"
+      >
         {loading ? (
           Array(5).fill(0).map((_, i) => (
             <div key={i} className="h-14 bg-gray-100 animate-pulse rounded-2xl" />
@@ -86,7 +103,7 @@ export const ViewLeaderboard: React.FC = () => {
         ) : entries.length === 0 ? (
           <p className="text-center text-gray-400 py-8 italic">No records yet. Be the first!</p>
         ) : (
-          entries.map((entry, index) => (
+          displayedEntries.map((entry, index) => (
             <motion.div
               key={entry.id}
               initial={{ opacity: 0, y: 10 }}

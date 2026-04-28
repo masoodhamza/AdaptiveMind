@@ -14,8 +14,13 @@ interface HistoryProps {
 export const ViewHistory: React.FC<HistoryProps> = ({ userId }) => {
   const [history, setHistory] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    if (!userId || userId.startsWith('local-')) {
+      setLoading(false);
+      return;
+    }
     const fetchHistory = async () => {
       const q = query(
         collection(db, 'leaderboard'),
@@ -36,7 +41,7 @@ export const ViewHistory: React.FC<HistoryProps> = ({ userId }) => {
           return timeB - timeA;
         });
         
-        setHistory(data.slice(0, 10));
+        setHistory(data);
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, 'leaderboard');
       } finally {
@@ -47,8 +52,10 @@ export const ViewHistory: React.FC<HistoryProps> = ({ userId }) => {
     fetchHistory();
   }, [userId]);
 
+  const displayedHistory = showAll ? history : history.slice(0, 5);
+
   return (
-    <div className="w-full max-w-2xl bg-white rounded-[2.5rem] p-8 mt-12 border border-gray-100 shadow-sm">
+    <div className="w-full max-w-2xl bg-white rounded-[2.5rem] p-8 mt-12 border border-gray-100 shadow-sm transition-all">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
@@ -56,20 +63,32 @@ export const ViewHistory: React.FC<HistoryProps> = ({ userId }) => {
           </div>
           <h2 className="text-xl font-bold text-gray-900">Your Learning Path</h2>
         </div>
-        <button className="text-sm font-bold text-blue-600 hover:underline">View All</button>
+        {history.length > 5 && (
+          <button 
+            onClick={() => setShowAll(!showAll)}
+            className="text-sm font-bold text-blue-600 hover:underline"
+          >
+            {showAll ? 'Show Less' : 'View All'}
+          </button>
+        )}
       </div>
 
-      <div className="space-y-4">
+      <div className={`space-y-4 ${showAll ? 'max-h-[500px] overflow-y-auto pr-2 custom-scrollbar' : ''}`}>
         {loading ? (
           Array(3).fill(0).map((_, i) => (
             <div key={i} className="h-20 bg-gray-50 animate-pulse rounded-2xl" />
           ))
         ) : history.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
-            <p className="text-gray-400 font-medium font-mono uppercase text-xs">No sessions completed yet</p>
+          <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100 px-6">
+            <p className="text-gray-400 font-medium font-mono uppercase text-xs mb-2">
+              {userId.startsWith('local-') ? "Guest Mode: Persistence Disabled" : "No sessions completed yet"}
+            </p>
+            {userId.startsWith('local-') && (
+              <p className="text-[10px] text-gray-400">Sign in with Google to track your long-term progress.</p>
+            )}
           </div>
         ) : (
-          history.map((session, index) => (
+          displayedHistory.map((session, index) => (
             <motion.div
               key={session.id}
               initial={{ opacity: 0, x: -10 }}

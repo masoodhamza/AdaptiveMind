@@ -5,6 +5,7 @@ export interface Question {
   correctAnswer: number; // Index of options
   explanation: string;
   bloomType?: string;
+  userAnswer?: number; // Added to track for analysis
 }
 
 export interface QuizConfig {

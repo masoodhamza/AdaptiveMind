@@ -8,7 +8,7 @@ import { Question, QuizConfig } from '@/lib/types';
 interface QuizProps {
   questions: Question[];
   config: QuizConfig;
-  onFinish: (score: number, timeElapsed: number) => void;
+  onFinish: (score: number, timeElapsed: number, answeredQuestions: Question[]) => void;
 }
 
 export const ViewQuiz: React.FC<QuizProps> = ({ questions, config, onFinish }) => {
@@ -19,10 +19,12 @@ export const ViewQuiz: React.FC<QuizProps> = ({ questions, config, onFinish }) =
   const [timeLeft, setTimeLeft] = useState(30); // 30s per question for Quiz mode
   const [totalTime, setTotalTime] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
 
   const currentQuestion = questions[currentIndex];
 
   const handleNext = useCallback(() => {
+    const finalAnswers = { ...userAnswers };
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(c => c + 1);
       setSelectedOption(null);
@@ -30,9 +32,13 @@ export const ViewQuiz: React.FC<QuizProps> = ({ questions, config, onFinish }) =
       setShowExplanation(false);
       setTimeLeft(30);
     } else {
-      onFinish(score, totalTime);
+      const questionsWithAnswers = questions.map(q => ({
+        ...q,
+        userAnswer: userAnswers[q.id]
+      }));
+      onFinish(score, totalTime, questionsWithAnswers);
     }
-  }, [currentIndex, questions.length, score, totalTime, onFinish]);
+  }, [currentIndex, questions, score, totalTime, onFinish, userAnswers]);
 
   useEffect(() => {
     if (config.mode === 'quiz' && !isAnswered) {
@@ -60,6 +66,7 @@ export const ViewQuiz: React.FC<QuizProps> = ({ questions, config, onFinish }) =
     if (isAnswered) return;
     setSelectedOption(index);
     setIsAnswered(true);
+    setUserAnswers(prev => ({ ...prev, [currentQuestion.id]: index }));
     
     if (index === currentQuestion.correctAnswer) {
       setScore(s => s + 1);

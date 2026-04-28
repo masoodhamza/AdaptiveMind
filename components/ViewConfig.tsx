@@ -46,13 +46,16 @@ export const ViewConfig: React.FC<ConfigProps> = ({ onStart }) => {
   const handleSubmit = (e: React.FormEvent, lobbyMode = false) => {
     e.preventDefault();
     const subjectList = subjects.split(',').map(s => s.trim()).filter(Boolean);
-    if (subjectList.length === 0 && !fileContext) return;
+    if (subjectList.length === 0 && !fileContext) {
+      alert("Please enter at least one subject or upload a study material.");
+      return;
+    }
     
     onStart({
       subjects: subjectList.length > 0 ? subjectList : [fileContext?.name || 'General'],
       difficulty,
       questionCount,
-      mode,
+      mode: lobbyMode ? 'quiz' : mode,
       fileContext: fileContext ? { data: fileContext.data, mimeType: fileContext.mimeType } : undefined
     }, lobbyMode);
   };
@@ -204,12 +207,14 @@ export const ViewConfig: React.FC<ConfigProps> = ({ onStart }) => {
 
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <button
+            type="button"
             onClick={(e) => handleSubmit(e, false)}
             className="flex-1 bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95"
           >
             Start Solo Session
           </button>
           <button
+            type="button"
             onClick={(e) => handleSubmit(e, true)}
             className="flex-1 bg-white border-2 border-gray-900 text-gray-900 font-bold py-4 rounded-2xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
           >

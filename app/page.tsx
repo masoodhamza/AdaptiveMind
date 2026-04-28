@@ -65,16 +65,17 @@ export default function AdaptiveMindApp() {
   };
 
   const startQuiz = async (quizConfig: QuizConfig, lobbyMode: boolean) => {
+    if (lobbyMode && (!user || user.localOnly)) {
+      setError("Multiplayer 'Battle Mode' requires a real account. Please sign in with Google.");
+      return;
+    }
+
     setConfig(quizConfig);
     setAppState('loading');
     setError(null);
 
     try {
       if (lobbyMode) {
-        if (!user || user.localOnly) {
-          throw new Error("Multiplayer 'Battle Mode' requires a Google Sign-in to sync real-time scores.");
-        }
-        
         const fbConfig = { ...quizConfig };
         if (fbConfig.fileContext === undefined) {
           delete fbConfig.fileContext;
@@ -108,17 +109,22 @@ export default function AdaptiveMindApp() {
         return;
       }
 
+      console.log("Starting solo session...");
       const generatedQuestions = await generateMCQs(quizConfig);
+      if (!generatedQuestions || generatedQuestions.length === 0) {
+        throw new Error("No questions were generated. Please try different subjects.");
+      }
       setQuestions(generatedQuestions);
       setAppState('quiz');
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Failed to generate quiz. Please check subjects or try again.");
+      console.error("Session start error:", err);
+      setError(err.message || "Failed to start quiz. Check your connection or API key.");
       setAppState('config');
     }
   };
 
-  const handleLobbyStart = (lobbyQuestions: Question[]) => {
+  const handleLobbyStart = (lobbyQuestions: Question[], lobbyConfig: QuizConfig) => {
+    setConfig(lobbyConfig);
     setQuestions(lobbyQuestions);
     setAppState('quiz');
   };
@@ -128,12 +134,14 @@ export default function AdaptiveMindApp() {
     setAppState('lobby');
   };
 
-  const finishQuiz = async (score: number, time: number) => {
+  const finishQuiz = async (score: number, time: number, answeredQuestions: Question[]) => {
+    setQuestions(answeredQuestions); // This now includes userAnswer for each question
     setSessionResults({ score, time });
     setAppState('result');
 
-    if (user && !user.localOnly && config && config.mode === 'quiz') {
-      const timeBonus = Math.max(0, 100 - time);
+    if (user && !user.localOnly && config) {
+      // Points formula: (Difficulty x Correct Answers x 10) + Time Bonus
+      const timeBonus = config.mode === 'quiz' ? Math.max(0, 100 - time) : 0;
       const points = (config.difficulty * score * 10) + timeBonus;
 
       try {
@@ -141,8 +149,12 @@ export default function AdaptiveMindApp() {
           userId: user.uid,
           displayName: user.displayName || 'Anonymous',
           points,
+          score,
+          totalQuestions: questions.length,
+          time,
           difficulty: config.difficulty,
-          subjectStr: config.subjects[0],
+          subjectStr: config.subjects[0] || 'General',
+          mode: config.mode,
           createdAt: serverTimestamp()
         });
         
@@ -362,6 +374,7 @@ export default function AdaptiveMindApp() {
                 score={sessionResults.score} 
                 totalQuestions={questions.length}
                 timeElapsed={sessionResults.time}
+                questions={questions}
                 config={config}
                 onReset={resetApp}
               />

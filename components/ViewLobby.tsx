@@ -11,12 +11,12 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '@/lib/firebase';
-import { Lobby, Question } from '@/lib/types';
+import { Lobby, Question, QuizConfig } from '@/lib/types';
 
 interface LobbyProps {
   lobbyId: string;
   user: any;
-  onStart: (questions: Question[]) => void;
+  onStart: (questions: Question[], config: QuizConfig) => void;
   onCancel: () => void;
 }
 
@@ -32,7 +32,7 @@ export const ViewLobby: React.FC<LobbyProps> = ({ lobbyId, user, onStart, onCanc
         setLobby({ ...data, id: snapshot.id });
         
         if (data.status === 'active' && data.questions) {
-          onStart(data.questions);
+          onStart(data.questions, data.config);
         }
       }
     }, (error) => {
@@ -141,13 +141,16 @@ export const ViewLobby: React.FC<LobbyProps> = ({ lobbyId, user, onStart, onCanc
                 )}
               </motion.div>
             ))}
-            {lobby.players.length < 3 && (
-              <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-100 rounded-3xl opacity-50">
-                <div className="w-16 h-16 rounded-full bg-gray-50 border-2 border-dashed border-gray-100 flex items-center justify-center text-gray-300 mb-3">
+            {lobby.players.length < 4 && (
+              <button 
+                onClick={copyCode}
+                className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-100 rounded-3xl hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-16 h-16 rounded-full bg-blue-50 border-2 border-dashed border-blue-100 flex items-center justify-center text-blue-400 mb-3 group-hover:scale-110 transition-transform">
                   <UserPlus size={24} />
                 </div>
-                <p className="text-xs font-bold text-gray-300 uppercase">Invite Friend</p>
-              </div>
+                <p className="text-xs font-bold text-blue-400 uppercase">Invite Friend</p>
+              </button>
             )}
           </AnimatePresence>
         </div>

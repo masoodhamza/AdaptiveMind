@@ -30,6 +30,7 @@ export const generateMCQs = async (config: QuizConfig): Promise<Question[]> => {
 
   try {
     const ai = getAI();
+    console.log("Generating MCQ questions...", { subjects, difficulty, questionCount, hasFile: !!fileContext });
     
     const contents: any[] = [{ role: 'user', parts: [{ text: prompt }] }];
     
@@ -68,11 +69,13 @@ export const generateMCQs = async (config: QuizConfig): Promise<Question[]> => {
     });
 
     const text = response.text;
+    console.log("AI Response received successfully.");
     if (!text) {
       throw new Error("No text returned from Gemini API");
     }
     
     const questions: Question[] = JSON.parse(text);
+    console.log("Generated", questions.length, "questions.");
     return questions.map((q, index) => ({
       ...q,
       id: `ai-${Date.now()}-${index}`
