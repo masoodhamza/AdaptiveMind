@@ -150,7 +150,7 @@ export default function AdaptiveMindApp() {
           displayName: user.displayName || 'Anonymous',
           points,
           score,
-          totalQuestions: questions.length,
+          totalQuestions: answeredQuestions.length,
           time,
           difficulty: config.difficulty,
           subjectStr: config.subjects[0] || 'General',

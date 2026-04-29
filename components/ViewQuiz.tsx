@@ -20,11 +20,30 @@ export const ViewQuiz: React.FC<QuizProps> = ({ questions, config, onFinish }) =
   const [totalTime, setTotalTime] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
+  const [isFinished, setIsFinished] = useState(false);
+  const finishedRef = React.useRef(false);
 
   const currentQuestion = questions[currentIndex];
 
+  useEffect(() => {
+    if (isFinished && !finishedRef.current) {
+      finishedRef.current = true;
+      
+      const questionsWithAnswers = questions.map(q => ({
+        ...q,
+        userAnswer: userAnswers[q.id]
+      }));
+
+      // Calculate score from userAnswers to ensure accuracy
+      const finalScore = questions.reduce((acc, q) => {
+        return userAnswers[q.id] === q.correctAnswer ? acc + 1 : acc;
+      }, 0);
+
+      onFinish(finalScore, totalTime, questionsWithAnswers);
+    }
+  }, [isFinished, questions, userAnswers, totalTime, onFinish]);
+
   const handleNext = useCallback(() => {
-    const finalAnswers = { ...userAnswers };
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(c => c + 1);
       setSelectedOption(null);
@@ -32,13 +51,9 @@ export const ViewQuiz: React.FC<QuizProps> = ({ questions, config, onFinish }) =
       setShowExplanation(false);
       setTimeLeft(30);
     } else {
-      const questionsWithAnswers = questions.map(q => ({
-        ...q,
-        userAnswer: userAnswers[q.id]
-      }));
-      onFinish(score, totalTime, questionsWithAnswers);
+      setIsFinished(true);
     }
-  }, [currentIndex, questions, score, totalTime, onFinish, userAnswers]);
+  }, [currentIndex, questions.length]);
 
   useEffect(() => {
     if (config.mode === 'quiz' && !isAnswered) {

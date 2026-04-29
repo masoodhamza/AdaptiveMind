@@ -124,7 +124,7 @@ export const ViewLobby: React.FC<LobbyProps> = ({ lobbyId, user, onStart, onCanc
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <AnimatePresence>
-            {lobby.players.map((player, idx) => (
+            {lobby.players.map((player) => (
               <motion.div 
                 key={player.uid}
                 initial={{ opacity: 0, scale: 0.8 }}

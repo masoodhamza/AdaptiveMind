@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { RefreshCcw, Layout, Share2, Award, ChevronLeft, Check, X, Info } from 'lucide-react';
 import { QuizConfig, Question } from '@/lib/types';
 
@@ -59,14 +59,23 @@ export const ViewResults: React.FC<ResultProps> = ({ score, totalQuestions, time
 
         <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
           {questions.map((q, idx) => {
-            const isCorrect = q.userAnswer === q.correctAnswer;
+            const isCorrect = q.userAnswer !== undefined && q.userAnswer === q.correctAnswer;
+            const isUnanswered = q.userAnswer === undefined;
+            
             return (
               <div key={q.id} className="p-5 rounded-3xl border border-gray-100 bg-gray-50/50">
-                <div className="flex items-start gap-3 mb-3">
-                  <span className="w-6 h-6 bg-gray-900 text-white rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
-                    {idx + 1}
-                  </span>
-                  <p className="font-bold text-gray-900 leading-snug">{q.question}</p>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 bg-gray-900 text-white rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <p className="font-bold text-gray-900 leading-snug">{q.question}</p>
+                  </div>
+                  {isUnanswered && (
+                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 whitespace-nowrap">
+                      NOT ANSWERED
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-2 ml-9">

@@ -10,6 +10,9 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [".next/**", "dist/**", "node_modules/**"]
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
@@ -17,7 +20,8 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": "warn",
       "prefer-const": "warn",
       "@next/next/no-img-element": "off",
-      "react-hooks/exhaustive-deps": "warn"
+      "react-hooks/exhaustive-deps": "warn",
+      "@typescript-eslint/triple-slash-reference": "off"
     }
   }
 ];

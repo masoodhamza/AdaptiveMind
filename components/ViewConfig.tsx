@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Sliders, BookOpen, Layers, Zap, Users, FileUp, X, FileText, Check } from 'lucide-react';
+import { Sliders, Layers, Zap, Users, FileUp, X, FileText, Check } from 'lucide-react';
 import { QuizConfig } from '@/lib/types';
 
 interface ConfigProps {

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Trophy, Medal, Crown } from 'lucide-react';
-import { collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { LeaderboardEntry } from '@/lib/types';
 

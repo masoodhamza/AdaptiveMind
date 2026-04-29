@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { History, Calendar, Award, Zap, ChevronRight } from 'lucide-react';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { LeaderboardEntry } from '@/lib/types';
 
